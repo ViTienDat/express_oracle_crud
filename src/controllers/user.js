@@ -21,12 +21,14 @@ const created = async (req, res) => {
         data: "missing input",
       });
     }
+    
     if (!isPhone(phone)) {
       return res.status(401).json({
         success: false,
         data: "phone invalid",
       });
     }
+    
     if (!isEmail(email)) {
       return res.status(401).json({
         success: false,
@@ -39,7 +41,9 @@ const created = async (req, res) => {
         data: "identifier invalid",
       });
     }
+    
     const SQL = "BEGIN insert_customers_dat(:type, :name, :birth, :identifier, :address, :email, :phone, :p_err_code, :p_err_param); END;"
+    
     const binds = {
       type,
       name,
@@ -49,11 +53,10 @@ const created = async (req, res) => {
       email,
       phone,
     }
-    console.log(binds)
     const response = await db1.execute_proc(SQL, binds)
     return res.status(200).json({
-      success: true,
-      data: response ? response : null,
+      success: response ? true : false,
+      message: response
     });
   } catch (error) {
     throw new Error(error);
@@ -63,6 +66,20 @@ const created = async (req, res) => {
 const getUser = async (req, res) => {
   try {
     const response = await db1.execute("SELECT * FROM customers_dat");
+    return res.status(200).json({
+      success: response ? true : false,
+      data: response ? response.rows : null,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getDetailUser = async (req, res) => {
+  try {
+    const {id} = req.params
+    console.log(id)
+    const response = await db1.execute(`SELECT * FROM customers_dat WHERE id = TO_NUMBER(${id})`);
     return res.status(200).json({
       success: response ? true : false,
       data: response ? response.rows : null,
@@ -157,4 +174,5 @@ module.exports = {
   getUser,
   deleteUser,
   updateUser,
+  getDetailUser
 };
