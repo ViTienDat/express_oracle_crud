@@ -57,7 +57,6 @@ class DatabaseConnection {
 
         if (result.outBinds.p_err_code == 0) {
           let data = [];
-
           if (SQL.includes("p_REFCURSOR")) {
             const rs = result.outBinds.p_REFCURSOR;
             const cols = rs.metaData;
@@ -74,7 +73,8 @@ class DatabaseConnection {
           resolve({
             Errorcode: 0,
             ErrorMessage: "SUCCESS",
-            Data: data
+            Data: data,
+            tb: result?.implicitResults ? result?.implicitResults[0] : null
           });
         } else {
           resolve({

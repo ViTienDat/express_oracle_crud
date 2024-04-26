@@ -63,7 +63,7 @@ const created = async (req, res) => {
   }
 };
 
-const getUser = async (req, res) => {
+const test = async (req, res) => {
   try {
     const response = await db1.execute("SELECT * FROM customers_dat");
     return res.status(200).json({
@@ -169,14 +169,14 @@ const updateUser = async (req, res) => {
   }
 };
 
-const test = async (req, res) => {
+const getUser = async (req, res) => {
   try {
     const SQL = `BEGIN get_all_user_dat(:p_err_code, :p_err_param);END;`
     const binds = {}
     const response = await db1.execute_proc(SQL, binds);
     return res.status(200).json({
       success: response ? true : false,
-      data: response ? response : null,
+      data: response ? response?.tb : null,
     });
   } catch (error) {
     throw new Error(error);
