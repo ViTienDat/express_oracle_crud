@@ -169,10 +169,25 @@ const updateUser = async (req, res) => {
   }
 };
 
+const test = async (req, res) => {
+  try {
+    const SQL = `BEGIN get_all_user_dat(:p_err_code, :p_err_param);END;`
+    const binds = {}
+    const response = await db1.execute_proc(SQL, binds);
+    return res.status(200).json({
+      success: response ? true : false,
+      data: response ? response : null,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   created,
   getUser,
   deleteUser,
   updateUser,
-  getDetailUser
+  getDetailUser,
+  test
 };
