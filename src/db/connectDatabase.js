@@ -51,17 +51,16 @@ class DatabaseConnection {
         if (SQL.includes("p_REFCURSOR")) {
           binds.p_REFCURSOR = { dir: OracleDB.BIND_OUT, type: OracleDB.CURSOR };
         }
-
         console.log(SQL, binds);
         const result = await connection.execute(SQL, binds);
-
         if (result.outBinds.p_err_code == 0) {
           let data = [];
           if (SQL.includes("p_REFCURSOR")) {
             const rs = result.outBinds.p_REFCURSOR;
             const cols = rs.metaData;
-            let row;
-            while ((row = await rs.getRow())) {
+            let row2;
+            while ((row2 = await rs.getRow())) {
+              let row = Object.values(row2)
               var rowdata = {};
               for (var i = 0; i < cols.length; i++) {
                 rowdata[cols[i].name] = row[i];
@@ -73,8 +72,7 @@ class DatabaseConnection {
           resolve({
             Errorcode: 0,
             ErrorMessage: "SUCCESS",
-            Data: data,
-            tb: result?.implicitResults ? result?.implicitResults[0] : null
+            Data: data
           });
         } else {
           resolve({

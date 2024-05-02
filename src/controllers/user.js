@@ -1,8 +1,6 @@
-const db = require("../db/configDatabase");
-const { isEmail, isPhone, isIdentifier } = require("../helpers/validate");
 const DatabaseConnection = require("../db/connectDatabase");
 
-const db1 = new DatabaseConnection();
+const db = new DatabaseConnection();
 
 const created = async (req, res) => {
   try {
@@ -21,29 +19,9 @@ const created = async (req, res) => {
         data: "missing input",
       });
     }
-    
-    if (!isPhone(phone)) {
-      return res.status(401).json({
-        success: false,
-        data: "phone invalid",
-      });
-    }
-    
-    if (!isEmail(email)) {
-      return res.status(401).json({
-        success: false,
-        data: "email invalid",
-      });
-    }
-    if (!isIdentifier(type, identifier)) {
-      return res.status(401).json({
-        success: false,
-        data: "identifier invalid",
-      });
-    }
-    
-    const SQL = "BEGIN insert_customers_dat(:type, :name, :birth, :identifier, :address, :email, :phone, :p_err_code, :p_err_param); END;"
-    
+    const SQL =
+      "BEGIN insert_customers_dat(:type, :name, :birth, :identifier, :address, :email, :phone, :p_err_code, :p_err_param); END;";
+
     const binds = {
       type,
       name,
@@ -52,55 +30,12 @@ const created = async (req, res) => {
       address,
       email,
       phone,
-    }
-    const response = await db1.execute_proc(SQL, binds)
+    };
+    const response = await db.execute_proc(SQL, binds);
+    console.log(response)
     return res.status(200).json({
-      success: response ? true : false,
-      message: response
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
-const test = async (req, res) => {
-  try {
-    const response = await db1.execute("SELECT * FROM customers_dat");
-    return res.status(200).json({
-      success: response ? true : false,
-      data: response ? response.rows : null,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
-const getDetailUser = async (req, res) => {
-  try {
-    const {id} = req.params
-    console.log(id)
-    const response = await db1.execute(`SELECT * FROM customers_dat WHERE id = TO_NUMBER(${id})`);
-    return res.status(200).json({
-      success: response ? true : false,
-      data: response ? response.rows : null,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
-const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const SQL = "BEGIN delete_customers_dat(:id, :p_err_code, :p_err_param);END;"
-    const binds = {
-      id
-    }
-    const response = await db1.execute_proc(SQL, binds);
-    console.log(response);
-    return res.status(200).json({
-      success: response ? true : false,
-      data: response ? response : null,
+      success: response.Errorcode,
+      message: response.ErrorMessage
     });
   } catch (error) {
     throw new Error(error);
@@ -125,29 +60,12 @@ const updateUser = async (req, res) => {
         data: "missing input",
       });
     }
-    if (!isEmail(email) && email) {
-      return res.status(401).json({
-        success: false,
-        data: "email invalid",
-      });
-    }
-    if (!isPhone(phone) && phone) {
-      return res.status(401).json({
-        success: false,
-        data: "phone invalid",
-      });
-    }
-    if (!isIdentifier(type, identifier) && identifier) {
-      return res.status(401).json({
-        success: false,
-        data: "identifier invalid",
-      });
-    }
+
     const SQL = `
       BEGIN update_customers_dat(
         :id, :type, :name, :birth, :identifier, :address, :email, :phone, :p_err_code, :p_err_param
       );END;
-    `
+    `;
     const binds = {
       id,
       type,
@@ -157,11 +75,47 @@ const updateUser = async (req, res) => {
       address,
       email,
       phone,
-    }
-    const response = await db1.execute_proc(SQL, binds);
+    };
+    const response = await db.execute_proc(SQL, binds);
+    return res.status(200).json({
+      success: response.Errorcode,
+      message: response.ErrorMessage
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getDetailUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const SQL = `BEGIN get_detail_user_dat(:p_err_code, :p_err_param, :p_REFCURSOR, :p_user_id );END;`;
+    const binds = { p_user_id: id };
+    const response = await db.execute_proc(SQL, binds);
+    return res.status(200).json({
+      success: response ? true : false,
+      message: response.ErrorMessage,
+      data: response.Data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const SQL =
+      "BEGIN delete_customers_dat(:id, :p_err_code, :p_err_param);END;";
+    const binds = {
+      id,
+    };
+    const response = await db.execute_proc(SQL, binds);
     console.log(response);
     return res.status(200).json({
       success: response ? true : false,
+      message: response.ErrorMessage,
       data: response ? response : null,
     });
   } catch (error) {
@@ -171,12 +125,26 @@ const updateUser = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const SQL = `BEGIN get_all_user_dat(:p_err_code, :p_err_param);END;`
-    const binds = {}
-    const response = await db1.execute_proc(SQL, binds);
+    const SQL = `BEGIN get_all_user_dat(:p_err_code, :p_err_param, :p_REFCURSOR );END;`;
+    const binds = {};
+    const response = await db.execute_proc(SQL, binds);
+    console.log(response);
     return res.status(200).json({
       success: response ? true : false,
-      data: response ? response?.tb : null,
+      message: response.ErrorMessage,
+      data: response.Data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const test = async (req, res) => {
+  try {
+    const response = await db.execute("SELECT * FROM customers_dat");
+    return res.status(200).json({
+      success: response ? true : false,
+      data: response ? response.rows : null,
     });
   } catch (error) {
     throw new Error(error);
@@ -189,5 +157,5 @@ module.exports = {
   deleteUser,
   updateUser,
   getDetailUser,
-  test
+  test,
 };
